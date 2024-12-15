@@ -1,0 +1,6 @@
+@ASP.NET_EMPLOYEE_ADMIN_PORTAL_HostAddress = http://localhost:5161
+
+GET {{ASP.NET_EMPLOYEE_ADMIN_PORTAL_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
