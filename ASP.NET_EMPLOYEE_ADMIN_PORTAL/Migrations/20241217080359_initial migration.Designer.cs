@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241215182448_initial-migration")]
+    [Migration("20241217080359_initial migration")]
     partial class initialmigration
     {
         /// <inheritdoc />
