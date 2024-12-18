@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241217080359_initial migration")]
-    partial class initialmigration
+    [Migration("20241218081703_office-employee-relation")]
+    partial class officeemployeerelation
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,6 +39,9 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("OfficeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
@@ -47,7 +50,43 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OfficeId");
+
                     b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities.Office", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Office");
+                });
+
+            modelBuilder.Entity("ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities.Employee", b =>
+                {
+                    b.HasOne("ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities.Office", "Office")
+                        .WithMany("Employees")
+                        .HasForeignKey("OfficeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Office");
+                });
+
+            modelBuilder.Entity("ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities.Office", b =>
+                {
+                    b.Navigation("Employees");
                 });
 #pragma warning restore 612, 618
         }
