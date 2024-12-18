@@ -43,12 +43,19 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
         [HttpPost]
         public IActionResult AddEmployee(AddEmployeeDto addEmployeeDto)
         {
+            var office = dbContext.Offices.Find(addEmployeeDto.OfficeId);
+
+            if (office is null)
+                return NotFound("Office not found!");
+
+
             var employeeEntity = new Employee()
             {
                 Name = addEmployeeDto.Name,
                 Email = addEmployeeDto.Email,
                 Phone = addEmployeeDto.Phone,
-                Salary = addEmployeeDto.Salary
+                Salary = addEmployeeDto.Salary,
+                OfficeId = addEmployeeDto.OfficeId,
             };
 
             dbContext.Employees.Add(employeeEntity);
@@ -70,6 +77,16 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
             employee.Email = updateEmployeeDto.Email;
             employee.Phone = updateEmployeeDto.Phone;
             employee.Salary = updateEmployeeDto.Salary;
+
+            if (updateEmployeeDto.OfficeId.HasValue)
+            {
+                var office = dbContext.Offices.Find(id);
+
+                if (office is null)
+                    return NotFound("Office not found!");
+
+                employee.OfficeId = updateEmployeeDto.OfficeId.Value;
+            }
 
             dbContext.SaveChanges();
 

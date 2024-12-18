@@ -10,6 +10,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Data
         }
 
         public DbSet<Employee> Employees { get; set; }
+        public DbSet<Office> Offices { get; set; }
     }
 }
 
