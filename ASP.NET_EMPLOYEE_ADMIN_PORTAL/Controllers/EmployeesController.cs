@@ -48,7 +48,6 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
             if (office is null)
                 return NotFound("Office not found!");
 
-
             var employeeEntity = new Employee()
             {
                 Name = addEmployeeDto.Name,
@@ -61,7 +60,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
             dbContext.Employees.Add(employeeEntity);
             dbContext.SaveChanges();
 
-            return Ok(employeeEntity);
+            return Ok(addEmployeeDto);
         }
 
         [HttpPut]

@@ -1,6 +1,4 @@
-﻿using System.Reflection.Metadata;
-
-namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities
+﻿namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities
 {
     public class Employee
     {
