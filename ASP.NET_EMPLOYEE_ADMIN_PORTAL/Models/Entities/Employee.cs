@@ -15,5 +15,6 @@
         public Guid OfficeId { get; set; }
 
         public Office Office { get; set; } = null!;
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
     }
 }

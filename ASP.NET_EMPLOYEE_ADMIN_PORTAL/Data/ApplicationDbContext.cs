@@ -15,10 +15,16 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Office>()
-                .HasMany(e => e.Employees)
+                .HasMany(o => o.Employees)
                 .WithOne(e => e.Office)
                 .HasForeignKey(e => e.OfficeId)
                 .IsRequired();
+
+            //modelBuilder.Entity<Project>()
+            //    .HasMany(p => p.Employees)
+            //    .WithMany(e => e.Projects)
+            //    .UsingEntity("EmployeeProject")
+            //    .
         }
     }
 }
