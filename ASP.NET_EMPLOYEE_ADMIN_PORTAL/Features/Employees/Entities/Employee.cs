@@ -1,4 +1,7 @@
-﻿namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities
+﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Entities;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Entities;
+
+namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities
 {
     public class Employee
     {
@@ -15,6 +18,9 @@
         public Guid OfficeId { get; set; }
 
         public Office Office { get; set; } = null!;
-        public ICollection<Project> Projects { get; set; } = new List<Project>();
+
+        //public List<EmployeeProject> EmployeeProjects { get; } = [];
+
+        public List<Project> Projects { get; set; } = [];
     }
 }

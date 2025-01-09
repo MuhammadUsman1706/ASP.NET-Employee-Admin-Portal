@@ -1,6 +1,6 @@
-﻿namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models
+﻿namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Dtos
 {
-    public class AddEmployeeDto
+    public class UpdateEmployeeDto
     {
         public required string Name { get; set; }
 
@@ -10,6 +10,6 @@
 
         public decimal Salary { get; set; }
 
-        public required Guid OfficeId { get; set; }
+        public Guid? OfficeId { get; set; }
     }
 }

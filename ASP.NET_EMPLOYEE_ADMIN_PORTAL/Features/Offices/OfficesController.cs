@@ -1,10 +1,11 @@
 ﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Data;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Dtos;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
+namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -55,7 +56,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
             {
                 query = query.Where(o =>
                     o.Name.Contains(search) ||
-                    (o.Address != null && o.Address.Contains(search)));
+                    o.Address != null && o.Address.Contains(search));
             }
 
             // Dynamic sorting
@@ -90,7 +91,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
                     Phone = employee.Phone,
                     Salary = employee.Salary,
                 }).ToList()
-            }).FirstOrDefault(office =>  office.Id == id);
+            }).FirstOrDefault(office => office.Id == id);
 
             if (office is null)
                 return NotFound("Office not found!");

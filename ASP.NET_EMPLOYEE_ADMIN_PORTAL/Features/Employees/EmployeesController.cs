@@ -1,11 +1,12 @@
 ﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Data;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Dtos;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Entities;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
-namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
+namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
 {
     // localhost:xxxx/api/employees
     [ApiController]
@@ -30,11 +31,10 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
         {
             int size = pageSize ?? 10;
             string field = sortField ?? "Name";
-            string order = (string.IsNullOrEmpty(sortOrder) || sortOrder.ToLower() == "ascending" || sortOrder.ToLower() == "asc") ? "asc" : "desc";
+            string order = string.IsNullOrEmpty(sortOrder) || sortOrder.ToLower() == "ascending" || sortOrder.ToLower() == "asc" ? "asc" : "desc";
 
             if (pageNo <= 0)
                 return BadRequest("Page number must be greater than 0");
-
 
             int toSkip = (pageNo - 1) * size;
 
@@ -59,7 +59,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
                             Address = employee.Office.Address,
                         }
                     })
-                    .Where(e => (search == null || e.Name.Contains(search) || e.Email.Contains(search) || e.Phone.Contains(search)))
+                    .Where(e => search == null || e.Name.Contains(search) || e.Email.Contains(search) || e.Phone.Contains(search))
                     .OrderBy(sortExpression)
                     .Skip(toSkip)
                     .Take(size)
@@ -91,7 +91,12 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Controllers
                     Id = employee.Office.Id,
                     Name = employee.Office.Name,
                     Address = employee.Office.Address,
-                }
+                },
+                Projects = employee.Projects.Select(p => new Project()
+                {
+                    Name = p.Name,
+                    Description = p.Description,
+                }).ToList()
             }).FirstOrDefault(e => e.Id == id);
 
             if (employee is null)

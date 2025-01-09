@@ -1,4 +1,6 @@
-﻿namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Models.Entities
+﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
+
+namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Entities
 {
     public class Office
     {
