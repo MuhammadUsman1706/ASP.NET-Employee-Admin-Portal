@@ -1,10 +1,5 @@
-﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Data;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Dtos;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Entities;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Entities;
+﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Dtos;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq.Dynamic.Core;
 
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
 {
@@ -13,161 +8,60 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
     [Route("api/[controller]")]
     public class EmployeesController : ControllerBase
     {
-        private readonly ApplicationDbContext dbContext;
+        //private readonly ApplicationDbContext dbContext;
+        private readonly IEmployeesService _employeesService;
 
-        public EmployeesController(ApplicationDbContext dbContext)
+        public EmployeesController(IEmployeesService employeesService)
         {
-            this.dbContext = dbContext;
+            //this.dbContext = dbContext;
+            this._employeesService = employeesService;
         }
 
 
         [HttpGet]
-        public IActionResult GetAllEmployees(
+        public async Task<IActionResult> GetAllEmployees(
             [FromQuery(Name = "pageNo")] int pageNo,
             [FromQuery(Name = "pageSize")] int? pageSize,
             [FromQuery(Name = "sortField")] string? sortField,
             [FromQuery(Name = "sortOrder")] string? sortOrder,
             [FromQuery(Name = "search")] string? search)
         {
-            int size = pageSize ?? 10;
-            string field = sortField ?? "Name";
-            string order = string.IsNullOrEmpty(sortOrder) || sortOrder.ToLower() == "ascending" || sortOrder.ToLower() == "asc" ? "asc" : "desc";
+            var employees = await _employeesService.GetAllEmployeesAsync(pageNo, pageSize, sortField, sortOrder, search);
 
-            if (pageNo <= 0)
-                return BadRequest("Page number must be greater than 0");
-
-            int toSkip = (pageNo - 1) * size;
-
-            // Sort expression: "Name asc" or "Name desc"
-            string sortExpression = $"{field} {order}";
-
-            try
-            {
-                var allEmployees = dbContext.Employees
-                    .Select(employee => new Employee()
-                    {
-                        Id = employee.Id,
-                        Name = employee.Name,
-                        Email = employee.Email,
-                        Phone = employee.Phone,
-                        Salary = employee.Salary,
-                        OfficeId = employee.OfficeId,
-                        Office = new Office()
-                        {
-                            Id = employee.Office.Id,
-                            Name = employee.Office.Name,
-                            Address = employee.Office.Address,
-                        }
-                    })
-                    .Where(e => search == null || e.Name.Contains(search) || e.Email.Contains(search) || e.Phone.Contains(search))
-                    .OrderBy(sortExpression)
-                    .Skip(toSkip)
-                    .Take(size)
-                    .ToList<Employee>();
-
-                return Ok(allEmployees);
-            }
-            catch (Exception ex)
-            {
-                // Handle invalid field names or other errors
-                return BadRequest(new { message = $"Invalid sort field or order: {ex.Message}" });
-            }
+            return Ok(employees);
         }
 
         [HttpGet]
         [Route("{id:guid}")]
-        public IActionResult GetEmployeeById(Guid id)
+        public async Task<IActionResult> GetEmployeeById(Guid id)
         {
-            var employee = dbContext.Employees.Select(employee => new Employee()
-            {
-                Id = employee.Id,
-                Name = employee.Name,
-                Email = employee.Email,
-                Phone = employee.Phone,
-                Salary = employee.Salary,
-                OfficeId = employee.OfficeId,
-                Office = new Office()
-                {
-                    Id = employee.Office.Id,
-                    Name = employee.Office.Name,
-                    Address = employee.Office.Address,
-                },
-                Projects = employee.Projects.Select(p => new Project()
-                {
-                    Name = p.Name,
-                    Description = p.Description,
-                }).ToList()
-            }).FirstOrDefault(e => e.Id == id);
-
-            if (employee is null)
-                return NotFound("Employee not found!");
+            var employee = await _employeesService.GetEmployeeByIdAsync(id);
 
             return Ok(employee);
         }
 
         [HttpPost]
-        public IActionResult AddEmployee(AddEmployeeDto addEmployeeDto)
+        public async Task<IActionResult> AddEmployee(AddEmployeeDto addEmployeeDto)
         {
-            var office = dbContext.Offices.Find(addEmployeeDto.OfficeId);
+            var employee = await _employeesService.AddEmployeeAsync(addEmployeeDto);
 
-            if (office is null)
-                return NotFound("Office not found!");
-
-            var employeeEntity = new Employee()
-            {
-                Name = addEmployeeDto.Name,
-                Email = addEmployeeDto.Email,
-                Phone = addEmployeeDto.Phone,
-                Salary = addEmployeeDto.Salary,
-                OfficeId = addEmployeeDto.OfficeId,
-            };
-
-            dbContext.Employees.Add(employeeEntity);
-            dbContext.SaveChanges();
-
-            return Ok(addEmployeeDto);
+            return Ok(employee);
         }
 
         [HttpPut]
         [Route("{id:guid}")]
-        public IActionResult UpdateEmployee(Guid id, UpdateEmployeeDto updateEmployeeDto)
+        public async Task<IActionResult> UpdateEmployee(Guid id, UpdateEmployeeDto updateEmployeeDto)
         {
-            var employee = dbContext.Employees.Find(id);
-
-            if (employee is null)
-                return NotFound("Employee not found!");
-
-            employee.Name = updateEmployeeDto.Name;
-            employee.Email = updateEmployeeDto.Email;
-            employee.Phone = updateEmployeeDto.Phone;
-            employee.Salary = updateEmployeeDto.Salary;
-
-            if (updateEmployeeDto.OfficeId.HasValue)
-            {
-                var office = dbContext.Offices.Find(updateEmployeeDto.OfficeId);
-
-                if (office is null)
-                    return NotFound("Office not found!");
-
-                employee.OfficeId = updateEmployeeDto.OfficeId.Value;
-            }
-
-            dbContext.SaveChanges();
+            var employee = await _employeesService.UpdateEmployeeAsync(id, updateEmployeeDto);
 
             return Ok(employee);
         }
 
         [HttpDelete]
         [Route("{id:guid}")]
-        public IActionResult DeleteEmployee(Guid id)
+        public async Task<IActionResult> DeleteEmployee(Guid id)
         {
-            var employee = dbContext.Employees.Find(id);
-
-            if (employee is null)
-                return NotFound("Employee not found!");
-
-            dbContext.Employees.Remove(employee);
-            dbContext.SaveChanges();
+            var employee = await _employeesService.DeleteEmployeeAsync(id);
 
             return Ok(employee);
         }

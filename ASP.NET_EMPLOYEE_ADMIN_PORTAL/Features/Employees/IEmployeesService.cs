@@ -1,15 +1,18 @@
-﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
+﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Dtos;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
 
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
 {
     public interface IEmployeesService
     {
-        Task<IEnumerable<Employee>> GetAllEmployeesAsync();
+        Task<IEnumerable<Employee>> GetAllEmployeesAsync(int pageNo, int? pageSize, string? sortField, string? sortOrder, string? search);
 
-        Task<Employee?> GetEmployeeByIdAsync(Guid id);
+        Task<Employee> GetEmployeeByIdAsync(Guid id);
 
-        Task<Employee> CreateEmployeeAsync(Employee employee);
+        Task<AddEmployeeDto> AddEmployeeAsync(AddEmployeeDto addEmployeeDto);
 
-        Task<bool> DeleteEmployeeAsync(Guid id);
+        Task<UpdateEmployeeDto> UpdateEmployeeAsync(Guid id, UpdateEmployeeDto updateEmployeeDto);
+
+        Task<Employee> DeleteEmployeeAsync(Guid id);
     }
 }
