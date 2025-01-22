@@ -3,7 +3,7 @@ using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
 
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
 {
-    public interface IEmployeesService
+    public interface IEmployeeService
     {
         Task<IEnumerable<Employee>> GetAllEmployeesAsync(int pageNo, int? pageSize, string? sortField, string? sortOrder, string? search);
 

@@ -2,20 +2,19 @@
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Exceptions;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Dtos;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Entities;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Entities;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
+
 
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
 {
-    public class EmployeesService : IEmployeesService
+    public class EmployeeService : IEmployeeService
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly ApplicationDbContext _dbContext; // to be removed
+        private readonly IEmployeeRepository _employeeRepository;
 
-        public EmployeesService(ApplicationDbContext dbContext)
+        public EmployeeService(ApplicationDbContext dbContext, IEmployeeRepository employeeRepository)
         {
             _dbContext = dbContext;
+            _employeeRepository = employeeRepository;
         }
 
         public async Task<IEnumerable<Employee>> GetAllEmployeesAsync(int pageNo, int? pageSize, string? sortField, string? sortOrder, string? search)
@@ -32,60 +31,12 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
             // Sort expression: "Name asc" or "Name desc"
             string sortExpression = $"{field} {order}";
 
-            try
-            {
-                var employees = await _dbContext.Employees
-                    .Select(employee => new Employee()
-                    {
-                        Id = employee.Id,
-                        Name = employee.Name,
-                        Email = employee.Email,
-                        Phone = employee.Phone,
-                        Salary = employee.Salary,
-                        OfficeId = employee.OfficeId,
-                        Office = new Office()
-                        {
-                            Id = employee.Office.Id,
-                            Name = employee.Office.Name,
-                            Address = employee.Office.Address,
-                        }
-                    })
-                    .Where(e => string.IsNullOrEmpty(search) || e.Name.Contains(search) || e.Email.Contains(search) || e.Phone.Contains(search))
-                    .OrderBy(sortExpression)
-                    .Skip(toSkip)
-                    .Take(size)
-                    .ToListAsync();
-
-                return employees;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error fetching employees: {ex.Message}");
-            }
+            return await _employeeRepository.GetAllEmployees(pageNo, size, toSkip, sortExpression, search);
         }
 
         public async Task<Employee> GetEmployeeByIdAsync(Guid id)
         {
-            var employee = await _dbContext.Employees.Select(employee => new Employee()
-            {
-                Id = employee.Id,
-                Name = employee.Name,
-                Email = employee.Email,
-                Phone = employee.Phone,
-                Salary = employee.Salary,
-                OfficeId = employee.OfficeId,
-                Office = new Office()
-                {
-                    Id = employee.Office.Id,
-                    Name = employee.Office.Name,
-                    Address = employee.Office.Address,
-                },
-                Projects = employee.Projects.Select(p => new Project()
-                {
-                    Name = p.Name,
-                    Description = p.Description,
-                }).ToList()
-            }).FirstOrDefaultAsync(e => e.Id == id);
+            var employee = await _employeeRepository.GetEmployeeById(id);
 
             if (employee is null)
                 throw new EntityNotFoundException("Employee not found!");
@@ -111,8 +62,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
                     OfficeId = addEmployeeDto.OfficeId,
                 };
 
-                await _dbContext.Employees.AddAsync(employeeEntity);
-                await _dbContext.SaveChangesAsync();
+                await _employeeRepository.AddEmployee(employeeEntity);
 
                 return addEmployeeDto;
             }
@@ -126,7 +76,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
         {
             try
             {
-                var employee = await _dbContext.Employees.FindAsync(id);
+                var employee = await _employeeRepository.GetEmployeeById(id);
 
                 if (employee is null)
                     throw new EntityNotFoundException("Employee not found!");
@@ -146,7 +96,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
                     employee.OfficeId = updateEmployeeDto.OfficeId.Value;
                 }
 
-                await _dbContext.SaveChangesAsync();
+                await _employeeRepository.UpdateEmployee(employee);
 
                 return updateEmployeeDto;
             }
@@ -160,13 +110,12 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
         {
             try
             {
-                var employee = await _dbContext.Employees.FindAsync(id);
+                var employee = await _employeeRepository.GetEmployeeById(id);
 
                 if (employee is null)
                     throw new EntityNotFoundException("Employee not found!");
 
-                _dbContext.Employees.Remove(employee);
-                await _dbContext.SaveChangesAsync();
+                await _employeeRepository.DeleteEmployee(employee);
 
                 return employee;
             }
