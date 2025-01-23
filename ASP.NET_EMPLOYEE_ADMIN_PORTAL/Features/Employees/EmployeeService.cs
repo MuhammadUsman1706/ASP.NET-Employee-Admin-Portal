@@ -1,5 +1,6 @@
 ﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Data;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Exceptions;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Dtos;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
 
@@ -8,13 +9,13 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
 {
     public class EmployeeService : IEmployeeService
     {
-        private readonly ApplicationDbContext _dbContext; // to be removed
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IOfficeRepository _officeRepository;
 
-        public EmployeeService(ApplicationDbContext dbContext, IEmployeeRepository employeeRepository)
+        public EmployeeService(ApplicationDbContext dbContext, IEmployeeRepository employeeRepository, IOfficeRepository officeRepository)
         {
-            _dbContext = dbContext;
             _employeeRepository = employeeRepository;
+            _officeRepository = officeRepository;
         }
 
         public async Task<IEnumerable<Employee>> GetAllEmployeesAsync(int pageNo, int? pageSize, string? sortField, string? sortOrder, string? search)
@@ -48,7 +49,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
         {
             try
             {
-                var office = await _dbContext.Offices.FindAsync(addEmployeeDto.OfficeId);
+                var office = await _officeRepository.GetOfficeByIdAsync(addEmployeeDto.OfficeId);
 
                 if (office is null)
                     throw new EntityNotFoundException("Office not found!");
@@ -88,7 +89,7 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
 
                 if (updateEmployeeDto.OfficeId.HasValue)
                 {
-                    var office = await _dbContext.Offices.FindAsync(updateEmployeeDto.OfficeId);
+                    var office = await _officeRepository.GetOfficeByIdAsync(updateEmployeeDto.OfficeId.Value);
 
                     if (office is null)
                         throw new EntityNotFoundException("Office not found!");

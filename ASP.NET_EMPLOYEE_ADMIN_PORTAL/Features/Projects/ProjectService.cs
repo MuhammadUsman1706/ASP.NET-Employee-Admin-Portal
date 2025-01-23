@@ -1,78 +1,34 @@
-﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Data;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Exceptions;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
+﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Exceptions;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Dtos;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects
 {
     public class ProjectService : IProjectService
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IProjectRepository _projectRepository;
 
-        public ProjectService(ApplicationDbContext dbContext)
+        public ProjectService(IProjectRepository projectRepository)
         {
-            _dbContext = dbContext;
+            _projectRepository = projectRepository;
         }
 
         public async Task<IEnumerable<Project>> GetAllProjectsAsync(int pageNo, int? pageSize, string? sortField, string? sortOrder, string? search)
         {
-            if (pageNo <= 0)
-                throw new ArgumentException("Page number must be greater than 0");
-
             int size = pageSize ?? 10;
             string field = sortField ?? "Name";
-            bool isAscending = string.IsNullOrEmpty(sortOrder) || sortOrder.ToLower() == "asc" || sortOrder.ToLower() == "ascending";
+            string order = string.IsNullOrEmpty(sortOrder) || sortOrder.ToLower() == "asc" || sortOrder.ToLower() == "ascending" ? "asc" : "desc";
             int toSkip = (pageNo - 1) * size;
+            string sortExpression = $"{field} {order}";
 
-            IQueryable<Project> query = _dbContext.Projects.Select(project => new Project
-            {
-                Id = project.Id,
-                Name = project.Name,
-                Description = project.Description,
-                Employees = project.Employees.Select(e => new Employee
-                {
-                    Id = e.Id,
-                    Name = e.Name,
-                    Email = e.Email,
-                    Phone = e.Phone,
-                    Salary = e.Salary,
-                    OfficeId = e.OfficeId
-                }).ToList()
-            });
-
-            if (!string.IsNullOrEmpty(search))
-            {
-                query = query.Where(p => p.Name.Contains(search) || p.Description.Contains(search));
-            }
-
-            query = isAscending
-                ? query.OrderBy(p => EF.Property<object>(p, field))
-                : query.OrderByDescending(p => EF.Property<object>(p, field));
-
-            return await query.Skip(toSkip).Take(size).ToListAsync();
+            return await _projectRepository.GetAllProjects(pageNo, size, toSkip, sortExpression, search);
         }
 
         public async Task<Project> GetProjectByIdAsync(Guid id)
         {
-            var project = await _dbContext.Projects.Select(project => new Project
-            {
-                Id = project.Id,
-                Name = project.Name,
-                Description = project.Description,
-                Employees = project.Employees.Select(e => new Employee
-                {
-                    Id = e.Id,
-                    Name = e.Name,
-                    Email = e.Email,
-                    Phone = e.Phone,
-                    Salary = e.Salary,
-                    OfficeId = e.OfficeId
-                }).ToList()
-            }).FirstOrDefaultAsync(p => p.Id == id);
+            var project = await _projectRepository.GetProjectById(id);
 
-            if (project is null)
+            if (project == null)
                 throw new EntityNotFoundException("Project not found!");
 
             return project;
@@ -86,56 +42,35 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects
                 Description = addProjectDto.Description
             };
 
-            await _dbContext.Projects.AddAsync(projectEntity);
-            await _dbContext.SaveChangesAsync();
-
-            return projectEntity;
+            return await _projectRepository.AddProject(projectEntity);
         }
 
         public async Task<Project> UpdateProjectAsync(Guid id, UpdateProjectDto updateProjectDto)
         {
-            var project = await _dbContext.Projects.FindAsync(id);
+            var project = await _projectRepository.GetProjectById(id);
 
-            if (project is null)
+            if (project == null)
                 throw new EntityNotFoundException("Project not found!");
 
             project.Name = updateProjectDto.Name;
             project.Description = updateProjectDto.Description;
 
-            await _dbContext.SaveChangesAsync();
-
-            return project;
+            return await _projectRepository.UpdateProject(project);
         }
 
         public async Task<Project> DeleteProjectAsync(Guid id)
         {
-            var project = await _dbContext.Projects.FindAsync(id);
+            var project = await _projectRepository.GetProjectById(id);
 
-            if (project is null)
+            if (project == null)
                 throw new EntityNotFoundException("Project not found!");
 
-            _dbContext.Projects.Remove(project);
-            await _dbContext.SaveChangesAsync();
-
-            return project;
+            return await _projectRepository.DeleteProject(project);
         }
 
         public async Task<Project> MapProjectToEmployeeAsync(MapProjectEmployeeDto mapProjectEmployeeDto)
         {
-            var project = await _dbContext.Projects.Include(p => p.Employees).FirstOrDefaultAsync(p => p.Id == mapProjectEmployeeDto.projectId);
-
-            if (project is null)
-                throw new EntityNotFoundException("Project not found!");
-
-            var employee = await _dbContext.Employees.FindAsync(mapProjectEmployeeDto.employeeId);
-
-            if (employee is null)
-                throw new EntityNotFoundException("Employee not found!");
-
-            project.Employees.Add(employee);
-            await _dbContext.SaveChangesAsync();
-
-            return project;
+            return await _projectRepository.MapProjectToEmployee(mapProjectEmployeeDto.projectId, mapProjectEmployeeDto.employeeId);
         }
     }
 }
