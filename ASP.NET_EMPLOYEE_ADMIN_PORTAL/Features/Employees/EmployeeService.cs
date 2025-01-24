@@ -3,6 +3,7 @@ using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Exceptions;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Dtos;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
+using FluentValidation;
 
 
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
@@ -11,11 +12,13 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IOfficeRepository _officeRepository;
+        private readonly IValidator<Employee> _employeeValidator;
 
-        public EmployeeService(ApplicationDbContext dbContext, IEmployeeRepository employeeRepository, IOfficeRepository officeRepository)
+        public EmployeeService(ApplicationDbContext dbContext, IEmployeeRepository employeeRepository, IOfficeRepository officeRepository, IValidator<Employee> employeeValidator)
         {
             _employeeRepository = employeeRepository;
             _officeRepository = officeRepository;
+            _employeeValidator = employeeValidator;
         }
 
         public async Task<IEnumerable<Employee>> GetAllEmployeesAsync(int pageNo, int? pageSize, string? sortField, string? sortOrder, string? search)
@@ -62,6 +65,14 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
                     Salary = addEmployeeDto.Salary,
                     OfficeId = addEmployeeDto.OfficeId,
                 };
+
+                var validationResult = await _employeeValidator.ValidateAsync(employeeEntity);
+
+                if (!validationResult.IsValid)
+                {
+                    var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                    throw new ValidationException($"Employee validation failed: {errors}");
+                }
 
                 await _employeeRepository.AddEmployee(employeeEntity);
 
