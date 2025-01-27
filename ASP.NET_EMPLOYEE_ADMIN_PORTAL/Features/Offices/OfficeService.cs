@@ -1,16 +1,19 @@
 ﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Exceptions;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Dtos;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Entities;
+using FluentValidation;
 
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices
 {
     public class OfficeService : IOfficeService
     {
         private readonly IOfficeRepository _officeRepository;
+        private readonly IValidator<Office> _officeValidator;
 
-        public OfficeService(IOfficeRepository officeRepository)
+        public OfficeService(IOfficeRepository officeRepository, IValidator<Office> officeValidator)
         {
             _officeRepository = officeRepository;
+            _officeValidator = officeValidator;
         }
 
         public async Task<IEnumerable<Office>> GetAllOfficesAsync(int pageNo, int? pageSize, string? sortField, string? sortOrder, string? search)
@@ -46,6 +49,14 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices
                 Address = addOfficeDto.Address
             };
 
+            var validationResult = await _officeValidator.ValidateAsync(officeEntity);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                throw new ValidationException($"Office validation failed: {errors}");
+            }
+
             return await _officeRepository.AddOfficeAsync(officeEntity);
         }
 
@@ -58,6 +69,14 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices
 
             office.Name = updateOfficeDto.Name;
             office.Address = updateOfficeDto.Address;
+
+            var validationResult = await _officeValidator.ValidateAsync(office);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                throw new ValidationException($"Office validation failed: {errors}");
+            }
 
             return await _officeRepository.UpdateOfficeAsync(office);
         }

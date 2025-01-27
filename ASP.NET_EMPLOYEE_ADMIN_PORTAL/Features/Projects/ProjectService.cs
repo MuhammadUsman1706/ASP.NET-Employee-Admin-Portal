@@ -1,16 +1,19 @@
 ﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Exceptions;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Dtos;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Entities;
+using FluentValidation;
 
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects
 {
     public class ProjectService : IProjectService
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly IValidator<Project> _projectValidator;
 
-        public ProjectService(IProjectRepository projectRepository)
+        public ProjectService(IProjectRepository projectRepository, IValidator<Project> projectValidator)
         {
             _projectRepository = projectRepository;
+            _projectValidator = projectValidator;
         }
 
         public async Task<IEnumerable<Project>> GetAllProjectsAsync(int pageNo, int? pageSize, string? sortField, string? sortOrder, string? search)
@@ -42,6 +45,14 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects
                 Description = addProjectDto.Description
             };
 
+            var validationResult = await _projectValidator.ValidateAsync(projectEntity);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                throw new ValidationException($"Project validation failed: {errors}");
+            }
+
             return await _projectRepository.AddProject(projectEntity);
         }
 
@@ -54,6 +65,14 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects
 
             project.Name = updateProjectDto.Name;
             project.Description = updateProjectDto.Description;
+
+            var validationResult = await _projectValidator.ValidateAsync(project);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                throw new ValidationException($"Project validation failed: {errors}");
+            }
 
             return await _projectRepository.UpdateProject(project);
         }

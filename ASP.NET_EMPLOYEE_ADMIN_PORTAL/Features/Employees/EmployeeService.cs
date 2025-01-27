@@ -108,6 +108,14 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
                     employee.OfficeId = updateEmployeeDto.OfficeId.Value;
                 }
 
+                var validationResult = await _employeeValidator.ValidateAsync(employee);
+
+                if (!validationResult.IsValid)
+                {
+                    var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                    throw new ValidationException($"Employee validation failed: {errors}");
+                }
+
                 await _employeeRepository.UpdateEmployee(employee);
 
                 return updateEmployeeDto;

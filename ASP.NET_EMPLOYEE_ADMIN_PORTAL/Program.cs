@@ -3,7 +3,9 @@ using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Exceptions;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees.Entities;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Offices.Entities;
 using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects;
+using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Entities;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,6 +30,8 @@ builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IOfficeRepository, OfficeRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IValidator<Employee>, EmployeeValidator>();
+builder.Services.AddScoped<IValidator<Office>, OfficeValidator>();
+builder.Services.AddScoped<IValidator<Project>, ProjectValidator>();
 
 var app = builder.Build();
 
