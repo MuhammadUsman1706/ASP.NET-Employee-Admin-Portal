@@ -18,36 +18,29 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects
 
         public async Task<IEnumerable<Project>> GetAllProjects(int pageNo, int pageSize, int toSkip, string sortExpression, string? search)
         {
-            try
-            {
-                var projects = await _dbContext.Projects
-                    .Select(project => new Project
+            var projects = await _dbContext.Projects
+                .Select(project => new Project
+                {
+                    Id = project.Id,
+                    Name = project.Name,
+                    Description = project.Description,
+                    Employees = project.Employees.Select(e => new Employee
                     {
-                        Id = project.Id,
-                        Name = project.Name,
-                        Description = project.Description,
-                        Employees = project.Employees.Select(e => new Employee
-                        {
-                            Id = e.Id,
-                            Name = e.Name,
-                            Email = e.Email,
-                            Phone = e.Phone,
-                            Salary = e.Salary,
-                            OfficeId = e.OfficeId
-                        }).ToList()
-                    })
-                    .Where(p => string.IsNullOrEmpty(search) || p.Name.Contains(search) || p.Description.Contains(search))
-                    .OrderBy(sortExpression)
-                    .Skip(toSkip)
-                    .Take(pageSize)
-                    .ToListAsync();
+                        Id = e.Id,
+                        Name = e.Name,
+                        Email = e.Email,
+                        Phone = e.Phone,
+                        Salary = e.Salary,
+                        OfficeId = e.OfficeId
+                    }).ToList()
+                })
+                .Where(p => string.IsNullOrEmpty(search) || p.Name.Contains(search) || p.Description.Contains(search))
+                .OrderBy(sortExpression)
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
 
-                return projects;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error fetching projects: {ex.Message}");
-            }
+            return projects;
         }
 
         public async Task<Project?> GetProjectById(Guid id)

@@ -1,5 +1,4 @@
-﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects;
-using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Dtos;
+﻿using ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Projects

@@ -50,99 +50,78 @@ namespace ASP.NET_EMPLOYEE_ADMIN_PORTAL.Features.Employees
 
         public async Task<AddEmployeeDto> AddEmployeeAsync(AddEmployeeDto addEmployeeDto)
         {
-            try
+            var office = await _officeRepository.GetOfficeByIdAsync(addEmployeeDto.OfficeId);
+
+            if (office is null)
+                throw new EntityNotFoundException("Office not found!");
+
+            var employeeEntity = new Employee()
             {
-                var office = await _officeRepository.GetOfficeByIdAsync(addEmployeeDto.OfficeId);
+                Name = addEmployeeDto.Name,
+                Email = addEmployeeDto.Email,
+                Phone = addEmployeeDto.Phone,
+                Salary = addEmployeeDto.Salary,
+                OfficeId = addEmployeeDto.OfficeId,
+            };
 
-                if (office is null)
-                    throw new EntityNotFoundException("Office not found!");
+            var validationResult = await _employeeValidator.ValidateAsync(employeeEntity);
 
-                var employeeEntity = new Employee()
-                {
-                    Name = addEmployeeDto.Name,
-                    Email = addEmployeeDto.Email,
-                    Phone = addEmployeeDto.Phone,
-                    Salary = addEmployeeDto.Salary,
-                    OfficeId = addEmployeeDto.OfficeId,
-                };
-
-                var validationResult = await _employeeValidator.ValidateAsync(employeeEntity);
-
-                if (!validationResult.IsValid)
-                {
-                    var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
-                    throw new ValidationException($"Employee validation failed: {errors}");
-                }
-
-                await _employeeRepository.AddEmployee(employeeEntity);
-
-                return addEmployeeDto;
-            }
-            catch (Exception ex)
+            if (!validationResult.IsValid)
             {
-                throw new InvalidOperationException($"Error adding employee: {ex.Message}");
+                var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                throw new ValidationException($"Employee validation failed: {errors}");
             }
+
+            await _employeeRepository.AddEmployee(employeeEntity);
+
+            return addEmployeeDto;
         }
 
         public async Task<UpdateEmployeeDto> UpdateEmployeeAsync(Guid id, UpdateEmployeeDto updateEmployeeDto)
         {
-            try
+            var employee = await _employeeRepository.GetEmployeeById(id);
+
+            if (employee is null)
+                throw new EntityNotFoundException("Employee not found!");
+
+            employee.Name = updateEmployeeDto.Name;
+            employee.Email = updateEmployeeDto.Email;
+            employee.Phone = updateEmployeeDto.Phone;
+            employee.Salary = updateEmployeeDto.Salary;
+
+            if (updateEmployeeDto.OfficeId.HasValue)
             {
-                var employee = await _employeeRepository.GetEmployeeById(id);
+                var office = await _officeRepository.GetOfficeByIdAsync(updateEmployeeDto.OfficeId.Value);
 
-                if (employee is null)
-                    throw new EntityNotFoundException("Employee not found!");
+                if (office is null)
+                    throw new EntityNotFoundException("Office not found!");
 
-                employee.Name = updateEmployeeDto.Name;
-                employee.Email = updateEmployeeDto.Email;
-                employee.Phone = updateEmployeeDto.Phone;
-                employee.Salary = updateEmployeeDto.Salary;
-
-                if (updateEmployeeDto.OfficeId.HasValue)
-                {
-                    var office = await _officeRepository.GetOfficeByIdAsync(updateEmployeeDto.OfficeId.Value);
-
-                    if (office is null)
-                        throw new EntityNotFoundException("Office not found!");
-
-                    employee.OfficeId = updateEmployeeDto.OfficeId.Value;
-                }
-
-                var validationResult = await _employeeValidator.ValidateAsync(employee);
-
-                if (!validationResult.IsValid)
-                {
-                    var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
-                    throw new ValidationException($"Employee validation failed: {errors}");
-                }
-
-                await _employeeRepository.UpdateEmployee(employee);
-
-                return updateEmployeeDto;
+                employee.OfficeId = updateEmployeeDto.OfficeId.Value;
             }
-            catch (Exception ex)
+
+            var validationResult = await _employeeValidator.ValidateAsync(employee);
+
+            if (!validationResult.IsValid)
             {
-                throw new InvalidOperationException($"Error updating employee: {ex.Message}");
+                var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                throw new ValidationException($"Employee validation failed: {errors}");
             }
+
+            await _employeeRepository.UpdateEmployee(employee);
+
+            return updateEmployeeDto;
         }
 
         public async Task<Employee> DeleteEmployeeAsync(Guid id)
         {
-            try
-            {
-                var employee = await _employeeRepository.GetEmployeeById(id);
+            var employee = await _employeeRepository.GetEmployeeById(id);
 
-                if (employee is null)
-                    throw new EntityNotFoundException("Employee not found!");
+            if (employee is null)
+                throw new EntityNotFoundException("Employee not found!");
 
-                await _employeeRepository.DeleteEmployee(employee);
+            await _employeeRepository.DeleteEmployee(employee);
 
-                return employee;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error deleting employee: {ex.Message}");
-            }
+            return employee;
         }
     }
 }
